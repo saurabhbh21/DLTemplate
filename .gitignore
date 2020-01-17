@@ -1,0 +1,8 @@
+.vscode/*
+dataset/*
+env
+Docs
+industrytagging
+IndustryTagging.egg-info
+pretrained_model
+*.pyc
