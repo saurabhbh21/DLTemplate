@@ -1,47 +1,108 @@
 import os
 from math import floor
 
+import re 
+
+import pickle
+
 import numpy as np 
 import pandas as pd
+import spacy
+from sklearn.preprocessing import MultiLabelBinarizer
+
+import torch
+from torch.utils.data import Dataset, DataLoader, random_split
+import torch.nn.functional as F
+
+from tagextractor.utils import PretrainedVector
+from tagextractor.constants_reader import Constant
+
+#load contant/cofig reader
+constant = Constant()
 
 
-class Dataset(object):
-    def __init__(self, dir_path, file_name, feature_cols, target_cols):
-        self.input_file_path = dir_path + os.sep + file_name
+#Global variable defination
+nlp = spacy.load('en_core_web_sm')
+word_to_index, emb_matrix, emb_dim = PretrainedVector.readPretrainedVector()
 
-        self.feature_cols = feature_cols
-        self.target_cols = target_cols
 
-        self.df = self.createCategorizedDataframe([*self.feature_cols, *self.target_cols])
-        self.train_df, self.valid_df, self.test_df = self.splitAndSave()
-        
+class TextDataset(Dataset):
+    "Create Tensor for Text Classification dataset"
+
+    def __init__(self, csv_filepath, feature, target, transform):
+        self.target = target
+        self.dataframe = pd.read_csv(csv_filepath, '\t', usecols=[*feature, *target])
+        self.dataframe['category_list'] = self.dataframe['category_list'].apply(TextDataset.create_list)
+        self.target_vector_encoder = self.createTagetVectorEncoder()
+        self.transform = transform
     
-    def createCategorizedDataframe(self, col_names):
-        dataframe = pd.read_csv(self.input_file_path, usecols=col_names, delimiter='\t')      
-        categorized_df =  dataframe.join(dataframe.pop('category_list').str.get_dummies(sep=","))
-        
-        return categorized_df
+    def __len__(self):
+        return len(self.dataframe)
     
-    def splitAndSave(self):
-        output_dir = os.path.dirname(self.input_file_path)
-        output_train_path = output_dir + os.sep + 'train.csv'
-        output_valid_path = output_dir + os.sep + 'valid.csv'
-        output_test_path = output_dir + os.sep + 'test.csv'
+
+    def __getitem__(self, idx):
+        if torch.is_tensor(idx):
+            idx = idx.tolist()
         
-        train_df = self.df.iloc[:floor(len(self.df)*0.8)]
-        valid_df = self.df.iloc[floor(len(self.df)*0.8) : floor(len(self.df)*0.9)]
-        test_df = self.df.iloc[floor(len(self.df)*0.9):]
+        feature = TextDataset.tokenizer(self.dataframe.iloc[idx, 0])
+        target = self.target_vector_encoder.transform([self.dataframe.iloc[idx, 1]])
 
-        train_df.to_csv(output_train_path, sep='\t', index=False)
-        valid_df.to_csv(output_valid_path, sep='\t', index=False)
-        test_df.to_csv(output_test_path, sep='\t', index=False)
+        sample = {'feature': feature, 'target': target}
+        sample = self.transform(sample)
 
-        return train_df, valid_df, test_df
+        return sample
+
     
+    def createTagetVectorEncoder(self, label_encoder_filepath=constant.pretrained_config['target_label_filename']):
+        label_encoder = MultiLabelBinarizer()
+        label_encoder.fit(self.dataframe[self.target[0]])
+
+        with open(label_encoder_filepath, 'wb') as fptr:
+            pickle.dump(label_encoder, fptr)
+        
+        return label_encoder
+        
+
+    @staticmethod
+    def create_list(string):
+        return str(string).split(",")
+
+    @staticmethod 
+    def tokenizer(text):
+        return np.array( [word_to_index.get(w.text.lower(), 0) for w in nlp(TextDataset.text_clean(text))] )
+    
+
+    @staticmethod
+    def text_clean(text):
+        text = re.sub(r'[^A-Za-z0-9]+', ' ', text) # remove non alphanumeric character
+        text = re.sub(r'https?:/\/\S+', ' ', text) # remove links
+        return text.strip()
+    
+    
+
+class ToTensor(object):
+    """Convert ndarrays in sample to Tensors."""
+
+    def __call__(self, sample, max_tensor_length=constant.dataset_config['sequence_length']):
+        feature, target = sample['feature'], sample['target']
+        
+        feature_tensor = torch.from_numpy(feature)
+        feature_tensor = feature_tensor[:max_tensor_length]
+        pad_length = max(0, max_tensor_length - feature_tensor.size()[0])
+        feature_tensor = F.pad(feature_tensor, pad=(0, pad_length), mode='constant', value=0)
+
+        target_tensor = torch.from_numpy(target)
+
+        return  {'feature': feature_tensor, 'target': target_tensor}
+
 
 if __name__ == "__main__":
-    dir_path = os.getcwd() + os.sep + 'dataset'
-    file_name = 'orgs.csv'
-    dataset = Dataset(dir_path, file_name, feature_cols=['short_description'], target_cols=['category_list'])
-    print(len(dataset.train_df), len(dataset.valid_df), len(dataset.test_df))
-        
+    text_dataset = TextDataset(constant.dataset_config['dataset_file'], constant.dataset_config['features'], constant.dataset_config['labels'], ToTensor())
+    
+    
+    train_dataset, test_dataset = random_split(text_dataset, [40, 10])
+    text_dataloader = DataLoader(train_dataset, batch_size=4)
+
+    for i_batch, sample_batched in enumerate(text_dataloader):
+        print('Batch:{}'.format(i_batch+1))
+        print('Feature:{}, \nTarget:{}'.format(sample_batched['feature'], sample_batched['target']))

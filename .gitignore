@@ -1,8 +1,10 @@
 .vscode/*
 dataset/*
+pretrained_model/*
+preprocessed_data/*
+model
 env
 Docs
-industrytagging
 IndustryTagging.egg-info
-pretrained_model
+IndustryTagging
 *.pyc

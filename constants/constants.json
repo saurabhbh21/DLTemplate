@@ -1,0 +1,41 @@
+{
+    "dataset_config": 
+    { 
+        "dataset_file":"dataset/orgs.csv",
+    
+        "features": ["short_description"],
+        "labels": ["category_list"],
+
+        "sequence_length": 16
+    },
+    
+    "pretrained_config":
+    {
+        "embedding_filename": "pretrained_model/glove.6B.300d.txt",
+        "target_label_filename": "preprocessed_data/target.pkl"
+    },
+
+    "model_config":
+    {
+        "hidden_dim": 100,
+        "layer_dim": 1,
+        "learning_rate": 0.05
+    },
+
+    "train_config":
+    {
+        "num_epochs": 5,
+        "train_batch_size": 5,
+        "valid_batch_size": 5,
+
+        "trained_model_dir": "model"
+    },
+
+    "predict_config":
+    {
+        "best_model_name":"weight_epoch-4_loss-0.06065165996551514"
+    }
+
+    
+   
+}
