@@ -1,12 +1,14 @@
 {
     "dataset_config": 
     { 
-        "dataset_file":"dataset/orgs.csv",
-    
-        "features": ["short_description"],
+        "dataset_file":"dataset/orgs_text.csv",
+        "url_path": "dataset/orgs.csv",
+
+        "urls": ["homepage_url"],
+        "features": ["description"],
         "labels": ["category_list"],
 
-        "sequence_length": 16
+        "sequence_length": 50
     },
     
     "pretrained_config":
@@ -17,23 +19,24 @@
 
     "model_config":
     {
-        "hidden_dim": 100,
+        "hidden_dim": 128,
         "layer_dim": 1,
-        "learning_rate": 0.05
+        "learning_rate": 0.5,
+        "model_name": "Industry Tagging"
     },
 
     "train_config":
     {
-        "num_epochs": 5,
-        "train_batch_size": 5,
-        "valid_batch_size": 5,
-
+        "num_epochs": 15,
+        "train_batch_size": 64,
+        "valid_batch_size": 64,
+        "test_split_ratio":0.05,
         "trained_model_dir": "model"
     },
 
     "predict_config":
     {
-        "best_model_name":"weight_epoch-4_loss-0.06065165996551514"
+        "best_model_name":"weight_epoch-45_loss-0.03107329085469246"
     }
 
     

@@ -3,6 +3,7 @@ dataset/*
 pretrained_model/*
 preprocessed_data/*
 model
+runs
 env
 Docs
 IndustryTagging.egg-info

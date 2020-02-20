@@ -31,7 +31,7 @@ class TextDataset(Dataset):
 
     def __init__(self, csv_filepath, feature, target, transform):
         self.target = target
-        self.dataframe = pd.read_csv(csv_filepath, '\t', usecols=[*feature, *target])
+        self.dataframe = pd.read_csv(csv_filepath, '\t', usecols=[*feature, *target], nrows=100000)
         self.dataframe['category_list'] = self.dataframe['category_list'].apply(TextDataset.create_list)
         self.target_vector_encoder = self.createTagetVectorEncoder()
         self.transform = transform
@@ -74,6 +74,7 @@ class TextDataset(Dataset):
 
     @staticmethod
     def text_clean(text):
+        text = str(text)
         text = re.sub(r'[^A-Za-z0-9]+', ' ', text) # remove non alphanumeric character
         text = re.sub(r'https?:/\/\S+', ' ', text) # remove links
         return text.strip()
@@ -92,6 +93,12 @@ class ToTensor(object):
         feature_tensor = F.pad(feature_tensor, pad=(0, pad_length), mode='constant', value=0)
 
         target_tensor = torch.from_numpy(target)
+
+        use_cuda = torch.cuda.is_available()
+        device = torch.device("cuda" if use_cuda else "cpu")
+
+        feature_tensor = feature_tensor.type(torch.LongTensor).to(device)
+        target_tensor = target_tensor.type(torch.LongTensor).to(device)
 
         return  {'feature': feature_tensor, 'target': target_tensor}
 

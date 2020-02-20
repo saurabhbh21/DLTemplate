@@ -18,20 +18,30 @@ class NeuralNetwork(nn.Module):
         self.embedding, embedding_dim = self.createEmbeddingLayer()
 
         #RNN followed bu fully connected NN
-        self.rnn = nn.RNN(embedding_dim, hidden_dim, layer_dim, batch_first=True)
-        self.fc = nn.Linear(hidden_dim, output_dim)
-        self.sigmoid = nn.Sigmoid()
+        self.rnn = nn.LSTM(embedding_dim, hidden_dim, layer_dim, batch_first=True)
+        
+        self.classifier = nn.Sequential(
+            nn.Linear(hidden_dim, 256),
+            nn.Dropout(0.3), #30 % probability 
+            nn.ReLU(),
+            nn.Linear(256, 512),
+            nn.Dropout(0.3), #30 % probability 
+            nn.ReLU(),
+            nn.Linear(512, output_dim),
+            nn.Sigmoid()
+        )
+        
 
 
     def forward(self, x):
         # Initialize hidden state with zeros   
-        hidden = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim)
+        hidden = ( torch.randn(self.layer_dim, x.size(0), self.hidden_dim),
+                   torch.randn(self.layer_dim, x.size(0), self.hidden_dim) )                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
             
         # one time-step computation of RNN
         out, _ = self.rnn(self.embedding(x), hidden)
         out = out[:, -1, :]
-        out = self.fc(out) 
-        out = self.sigmoid(out)
+        out = self.classifier(out) 
 
         return out
 
@@ -54,9 +64,9 @@ class NeuralNetwork(nn.Module):
 
 class Model(NeuralNetwork):
     def __init__(self,  
+                       output_dim,
                        hidden_dim=constant.model_config['hidden_dim'], 
                        layer_dim=constant.model_config['layer_dim'], 
-                       output_dim=79,
                        lr = constant.model_config['learning_rate']):
         
         super(Model, self).__init__(hidden_dim, layer_dim, output_dim)
@@ -66,8 +76,10 @@ class Model(NeuralNetwork):
         self.output_dim = output_dim
         self.learning_rate = lr
         
-        #nueral network object
-        self.nn_model = self.createModel()
+        #nueral network object on GPU(if available)
+        use_cuda = torch.cuda.is_available()
+        device = torch.device("cuda" if use_cuda else "cpu")
+        self.nn_model = self.createModel().to(device)
         
         
     def createModel(self):
@@ -77,10 +89,3 @@ class Model(NeuralNetwork):
         error = nn.MultiLabelSoftMarginLoss()
         optimizer = torch.optim.SGD(self.nn_model.parameters(), lr=self.learning_rate)
         return error, optimizer
-
-
-
-
-if __name__ == "__main__":
-    model = Model()
-        
