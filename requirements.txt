@@ -1,10 +1,10 @@
-requests==2.22.0
-beautifulsoup4==4.8.0
-pandas==0.25.0
-spacy==2.1.8
-scikit-learn==0.21.3
-tensorflow==2.0
-pymongo==3.9.0
-bson==0.5.8
-#torch==1.3.1+cpu torchvision==0.4.2+cpu -f https://download.pytorch.org/whl/torch_stable.html
-torchtext==0.4.0
+pandas==1.0.5 #handling email dataset
+spacy==2.3.0   #text pre-processing https://spacy.io/usage
+spacy-lookups-data==0.3.2 #for spacy lemmatizer
+scikit-learn==0.23.1  #metric calculation 
+Flask==1.1.2   # REST services
+
+#Please use right installation command by visiting https://pytorch.org/
+torch #for pytorch-1.5, ubuntu with cuda-10.2
+
+tensorboard==2.2.2 #for visualization of training and validation metrics

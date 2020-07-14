@@ -8,14 +8,14 @@ import pickle
 import numpy as np 
 import pandas as pd
 import spacy
-from sklearn.preprocessing import MultiLabelBinarizer
+from sklearn.preprocessing import LabelBinarizer
 
 import torch
 from torch.utils.data import Dataset, DataLoader, random_split
 import torch.nn.functional as F
 
-from tagextractor.utils import PretrainedVector
-from tagextractor.constants_reader import Constant
+from utils.utils import DataPreprocessing
+from utils.constants_reader import Constant
 
 #load contant/cofig reader
 constant = Constant()
@@ -23,7 +23,7 @@ constant = Constant()
 
 #Global variable defination
 nlp = spacy.load('en_core_web_sm')
-word_to_index, emb_matrix, emb_dim = PretrainedVector.readPretrainedVector()
+word_to_index, emb_matrix, emb_dim = DataPreprocessing.readPretrainedVector()
 
 
 class TextDataset(Dataset):
@@ -31,8 +31,7 @@ class TextDataset(Dataset):
 
     def __init__(self, csv_filepath, feature, target, transform):
         self.target = target
-        self.dataframe = pd.read_csv(csv_filepath, '\t', usecols=[*feature, *target], nrows=100000)
-        self.dataframe['category_list'] = self.dataframe['category_list'].apply(TextDataset.create_list)
+        self.dataframe = pd.read_csv(csv_filepath, '\t', usecols=[*feature, *target])
         self.target_vector_encoder = self.createTagetVectorEncoder()
         self.transform = transform
     
@@ -46,6 +45,7 @@ class TextDataset(Dataset):
         
         feature = TextDataset.tokenizer(self.dataframe.iloc[idx, 0])
         target = self.target_vector_encoder.transform([self.dataframe.iloc[idx, 1]])
+        target = np.hstack((target, 1 - target))
 
         sample = {'feature': feature, 'target': target}
         sample = self.transform(sample)
@@ -54,7 +54,7 @@ class TextDataset(Dataset):
 
     
     def createTagetVectorEncoder(self, label_encoder_filepath=constant.pretrained_config['target_label_filename']):
-        label_encoder = MultiLabelBinarizer()
+        label_encoder = LabelBinarizer()
         label_encoder.fit(self.dataframe[self.target[0]])
 
         with open(label_encoder_filepath, 'wb') as fptr:
@@ -98,12 +98,15 @@ class ToTensor(object):
         device = torch.device("cuda" if use_cuda else "cpu")
 
         feature_tensor = feature_tensor.type(torch.LongTensor).to(device)
-        target_tensor = target_tensor.type(torch.LongTensor).to(device)
+        target_tensor = target_tensor.type(torch.FloatTensor).to(device)
 
         return  {'feature': feature_tensor, 'target': target_tensor}
 
 
 if __name__ == "__main__":
+    ''' It's a test execution to check the correctness in creating Tensor from dataset. Please set nrows=50 in pd.read_csv line in init before execution'''
+
+
     text_dataset = TextDataset(constant.dataset_config['dataset_file'], constant.dataset_config['features'], constant.dataset_config['labels'], ToTensor())
     
     

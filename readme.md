@@ -1,55 +1,88 @@
-# Design Document - Industry Tagging
+# Project Setup Instruction
+1) Setup and Activate virtual environment (name of environment - **env**)
+      - Ubuntu: https://linuxize.com/post/how-to-create-python-virtual-environments-on-ubuntu-18-04/
 
-## Abstract
-Developing a pipeline to find the set of industries which any company belongs to, based on the textual description of the company.
- In this pipeline, the Multi-label classification is used where labels are the global set of industry tags. The Deep Learning model used is Recurrent Neural Network followed a Dense Layer and output layer is Sigmoid Layer.
+2) Install requirements and Execute script files
+    ```
+    a) pip install -r requirements.txt
+    b) sh scripts/script.sh
+    c) sh scripts/glove.sh
+    ```
+
+3) Execute project setup File
+    ```
+    python setup.py develop
+    ```
+    
+4) Save the Dataset in **dataset** folder as follows:
+     - *email.csv* - From Enron Email Dataset in Kaggle competition
+     - *actions.csv* - File containing email sentences which are actionable
+     
+     
+ ## Project Pipeline 
+1) Objective1: Refer (objective1/Objective1 - Documentation.txt)
+
+2) Objective2: Refer (objective2/Objective2 - Documentation.txt)
+
+3) Run following command to view result of trained model described in Objective2 (objective2/Objective2 - Documentation.txt)
+    ```
+    tensorboard --logdir=runs
+    ```
+    
+     
+     
+ # Project Execution Instruction
+ ## Objective1:
+ ```
+ **heuristic.py** - 
+      a) The core functional module for classifying a sentences based on heuristic model into actionable & non-actionable.
+      
+ **dataset.py** - 
+      a) The module to create dataset wih is_actionable for each sentence of emails in email.csv file.
+      b) The dataset is saved as *sentences_actionable_heuristic.csv*
+      
+ **api.py** - 
+      a) The module which takes raw email and returns list of pairs for (sentence, is_actionable).
+      b) Run the *api.py* in *objective1* Folder and test with *main_heuristic.py* file in *project* folder.
+ ```
+ 
+ ## Objective2:
+ ```
+ **dataset_generate.py** - 
+    a) Create the training dataset with examples in *actions.csv* as positive and negative sentences from heuristic for emails in *emails.csv* as negative
+ 
+ **dataset.py** - 
+    a) Create Tensor from training dataset [set the filename of training dataset (train.csv - geneted via dataset_generate.py/ sentences_actionable_heuristic.csv - generated via objective1/dataset.py) in constants/constant.json under ***objective2.dataset_config.dataset_file*** key.
+    b) Save the LabelEncoder for label to one-hot vector & vice-versa mapping in *data* folder
+    
+  **train.py** - 
+  a) The module responsible for defining Neural Network Architecture, its error and optimization function
+        
+  **train.py** - 
+  a) The module responsible for training the model for action item classification
+  b) Once all the dataset and configuration (set the configuration in **constants/constants.json** file) run the following for training the model - ***python objective2/train.py***
+  c) Once the training is over set the best model filename in *constants/constant.json* file under **objective2.predict_config.best_model_name** key for prediction with model
+  
+  
+  **predict.py**
+  a) Pass list on sentences to predict the is_actionable (actionable/non-actionable) for each sentence
+  
+  
+  **api.py** 
+  a) An api for predicting using trained model for sentences in a raw email.
+  b) b) Run the *api.py* in *objective1* Folder and test with *main_predict.py* file in *project* folder for predicting is_actionable for sentences in a raw email.
+        
+  ```
 
 
-## Data (Feature and Target) Vectorization
-The training dataset is a csv(\t separated) file. The (feature, target) column are ('short_description', 'category_list').
-
-The feature is transformed into list of indices (using pretrained Glove vector) on list of words obtained after preprocessing. The list of indices are padded or trimmed at the end to make sure all the instances have uniformity in ssequence lengh(last dimension) after vectorization.
-
-The target column is list of industry which a comapny belongs to. The LabelEncoder is created and stored after reading the dataset. This LabelEncoder is restored and used to transform the set of labels into Multi-Hot Encoder(a company can belong to multiple industries).
-
-
-## Model Architecture
-NN Architecture - 
-        (Indices -> Embedding Layer(300-D) : Non-trainable) 
-        ----> (RNN -> Hidden: (,100) ) ---> Sigmoid: (, 743) 
-        ###Num of dimension in output = 743
-
-Error Function - MultiLabelSoftMarginLoss
-
-Optimization Function - SGD (Stochastic Gradient Descent)
-
-
-
-## Training and Plotting Metrics
-Each instance is a dict {feature: Tensor, target: Tensor}
-
-Training Dataset Size = ~700k instances
-Train: Validation ratio = 90% : 10%
-
-Plot Metrics:  Loss & Validation Accuracy
-Plot Frequency: After each batch
-
-
-
-## Prediction
-Input - Company's Textual Description  
-
-Processing -
-        ------> Process to create vector only for feature({'feature': TensorObject})
-        ------> Execute trained NN (during training) model and 
-        ------> process output (from Multi-hot Encoder to set of Industry Tags)
-
-Output -
-        return list of industries in tuple format
-
-
-
-## Constants
-The hyperparameter and external files used in the entire piepline is mentioned in a global constant JSON file (constants/constants.json) 
-
-
+ ## Miscellaneous:
+ ```
+ **utils** Folder - 
+    a) **utils.py** - It contains the utility methods related to data-preprocessing, vectorization, finding evaluation metric, etc.
+    b) **constant_reader.py** - It is used to read the hyper-parameter and other constants in both *objective1* & *objective2*
+    
+   **data** Folder
+   a) **pronoun.json** - It is borrowed from *spacy* GitHub code. It has list of all pronouns (with properties) for use in heuristic model.
+   b) **target.pkl** - Label Encoder for encoding and Decoding Label Name to and from its one-hot representation
+    
+  

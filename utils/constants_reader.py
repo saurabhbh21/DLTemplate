@@ -4,6 +4,10 @@ constant_path = './constants/constants.json'
 
 
 class Constant(object):
+    '''
+    For reading constants from json file into python object
+    '''
+    
     @classmethod
     def __init__(cls):
         with open(constant_path) as f:

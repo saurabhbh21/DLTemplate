@@ -2,8 +2,8 @@ import pandas as pd
 import numpy as np
 import pickle
 
-from tagextractor.constants_reader import Constant
-from tagextractor.dataset import TextDataset, ToTensor
+from utils.constants_reader import Constant
+from module.dataset import TextDataset, ToTensor
 
 constant = Constant()
 

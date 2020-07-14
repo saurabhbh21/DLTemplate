@@ -1,18 +1,21 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 with open('requirements.txt', 'r') as f:
     required = f.read().splitlines()
 
 
 setup(
-   name='IndustryTagging',
+   name='DL Project Template',
    version='1.0',
-   description='Industry Tagging based on Company Description',
+   description='Template for iterating deep learning project',
    license="",
-   packages=['tagextractor'], 
+   author='Saurabh Bhagvatula',
+   author_email='saurabhbh21@gmail.com',
+   packages=find_packages(),  
+   setup_requires=['wheel'], #for building setup wheel
    install_requires=[required], #external packages as dependencies from requirements.txt
    scripts=[
-            'scripts/download.sh', 
+            'scripts/script.sh', 
             'scripts/glove.sh'
            ]
 )

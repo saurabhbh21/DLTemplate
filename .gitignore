@@ -1,11 +1,7 @@
-.vscode/*
-dataset/*
-pretrained_model/*
-preprocessed_data/*
+.vscode
+*.egg-info
+*.pyc
 model
 runs
 env
-Docs
-IndustryTagging.egg-info
-IndustryTagging
-*.pyc
+pretrained_model
