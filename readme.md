@@ -32,6 +32,8 @@
   a) The module responsible for training the model for action item classification
   b) Once all the dataset and configuration (set the configuration in **constants/constants.json** file) run the following for training the model - ***python module/train.py***
   c) Once the training is over set the best model filename in *constants/constant.json* file under **predict_config.best_model_name** key for prediction with model
+  d) Use following command from **project** folder to view training and validation loos & metrics:
+          tensorboard --logdir=runs
   
   
   **predict.py**
