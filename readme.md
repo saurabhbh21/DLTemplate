@@ -16,7 +16,7 @@
               
      
  # Project Execution Instruction
- ## Objective2:
+ ## Module:
  ```
  **dataset_generate.py** - 
     a) Write the module to Create the training dataset (train.csv)
