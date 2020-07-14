@@ -30,8 +30,8 @@
         
   **train.py** - 
   a) The module responsible for training the model for action item classification
-  b) Once all the dataset and configuration (set the configuration in **constants/constants.json** file) run the following for training the model - ***python objective2/train.py***
-  c) Once the training is over set the best model filename in *constants/constant.json* file under **objective2.predict_config.best_model_name** key for prediction with model
+  b) Once all the dataset and configuration (set the configuration in **constants/constants.json** file) run the following for training the model - ***python module/train.py***
+  c) Once the training is over set the best model filename in *constants/constant.json* file under **predict_config.best_model_name** key for prediction with model
   
   
   **predict.py**
